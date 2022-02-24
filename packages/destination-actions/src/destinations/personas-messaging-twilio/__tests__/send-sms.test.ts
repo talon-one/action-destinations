@@ -28,7 +28,7 @@ describe.each(['stage', 'production'])('%s environment', (environment) => {
     nock.cleanAll()
   })
 
-  describe(`send SMS`, () => {
+  describe('send SMS', () => {
     it('should abort when there is no `phone` external ID in the payload', async () => {
       const responses = await twilio.testAction('sendSms', {
         event: createTestEvent({
