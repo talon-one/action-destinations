@@ -29,39 +29,6 @@ const fetchProfileTraits = async (
   return body.traits
 }
 
-const fetchProfileExternalIds = async (
-  request: RequestFn,
-  settings: Settings,
-  profileId: string
-): Promise<Record<string, string>> => {
-  const endpoint = getProfileApiEndpoint(settings.profileApiEnvironment)
-  const response = await request(
-    `${endpoint}/v1/spaces/${settings.spaceId}/collections/users/profiles/user_id:${profileId}/external_ids?limit=25`,
-    {
-      headers: {
-        authorization: `Basic ${Buffer.from(settings.profileApiAccessToken + ':').toString('base64')}`,
-        'content-type': 'application/json'
-      }
-    }
-  )
-
-  const body = await response.json()
-  const externalIds: Record<string, string> = {}
-
-  for (const externalId of body.data) {
-    externalIds[externalId.type] = externalId.id
-  }
-
-  return externalIds
-}
-
-interface Profile {
-  user_id?: string
-  anonymous_id?: string
-  phone?: string
-  traits: Record<string, string>
-}
-
 const EXTERNAL_ID_KEY = 'phone'
 
 const DEFAULT_CONNECTION_OVERRIDES = 'rp=all&rc=5'
@@ -113,26 +80,66 @@ const action: ActionDefinition<Settings, Payload> = {
       type: 'boolean',
       required: false,
       default: false
+    },
+    externalIds: {
+      label: 'External IDs',
+      description: 'An array of user profile identity information.',
+      type: 'object',
+      multiple: true,
+      properties: {
+        id: {
+          label: 'ID',
+          description: 'A unique identifier for the collection.',
+          type: 'string'
+        },
+        type: {
+          label: 'type',
+          description: 'The external ID contact type.',
+          type: 'string'
+        },
+        subscriptionStatus: {
+          label: 'ID',
+          description: 'The subscription status for the identity.',
+          type: 'string'
+        }
+      },
+      default: {
+        '@arrayPath': [
+          '$.external_ids',
+          {
+            id: {
+              '@path': '$.id'
+            },
+            type: {
+              '@path': '$.type'
+            },
+            subscriptionStatus: {
+              '@path': '$.isSubscribed'
+            }
+          }
+        ]
+      }
     }
   },
   perform: async (request, { settings, payload }) => {
     if (!payload.send) {
       return
     }
-    const [traits, externalIds] = await Promise.all([
-      fetchProfileTraits(request, settings, payload.userId),
-      fetchProfileExternalIds(request, settings, payload.userId)
-    ])
-
-    const profile: Profile = {
-      ...externalIds,
-      traits
+    const externalId = payload.externalIds?.find(({ type }) => type === 'phone')
+    if (!externalId) {
+      return
     }
 
-    const phone = payload.toNumber || profile.phone
+    const traits = await fetchProfileTraits(request, settings, payload.userId)
 
+    const phone = payload.toNumber || externalId.id
     if (!phone) {
       return
+    }
+    const profile = {
+      user_id: payload.userId,
+      phone,
+      traits
     }
 
     // TODO: GROW-259 remove this when we can extend the request
@@ -150,7 +157,7 @@ const action: ActionDefinition<Settings, Payload> = {
     const customArgs: Record<string, string | undefined> = {
       ...payload.customArgs,
       __segment_internal_external_id_key__: EXTERNAL_ID_KEY,
-      __segment_internal_external_id_value__: profile[EXTERNAL_ID_KEY]
+      __segment_internal_external_id_value__: phone
     }
 
     if (webhookUrl && customArgs) {
