@@ -5,7 +5,7 @@ import nock from 'nock'
 const testDestination = createTestIntegration(Destination)
 
 describe('Talon.One - Update Attribute-Value pairs in customer profiles', () => {
-  it('Request body is missing', async () => {
+  it('misses request body', async () => {
     try {
       await testDestination.testAction('updateCustomerProfilesAttributes', {
         settings: {
@@ -18,7 +18,7 @@ describe('Talon.One - Update Attribute-Value pairs in customer profiles', () => 
     }
   })
 
-  it('No data items', async () => {
+  it('has no data items', async () => {
     try {
       await testDestination.testAction('updateCustomerProfilesAttributes', {
         settings: {
@@ -35,7 +35,7 @@ describe('Talon.One - Update Attribute-Value pairs in customer profiles', () => 
     }
   })
 
-  it('Should work', async () => {
+  it('should work', async () => {
     nock('https://integration.talon.one')
       .put('/segment/customer_profiles/attributes', {
         data: [

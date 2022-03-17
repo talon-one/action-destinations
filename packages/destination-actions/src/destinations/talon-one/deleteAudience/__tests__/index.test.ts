@@ -5,7 +5,7 @@ import nock from 'nock'
 const testDestination = createTestIntegration(Destination)
 
 describe('Talon.One - Delete Audience', () => {
-  it('Audience ID is missing', async () => {
+  it('misses audience ID', async () => {
     try {
       await testDestination.testAction('deleteAudience', {
         settings: {
@@ -18,7 +18,7 @@ describe('Talon.One - Delete Audience', () => {
     }
   })
 
-  it('Should work', async () => {
+  it('should work', async () => {
     nock('https://integration.talon.one')
       .delete('/segment/audiences/some_audience_id')
       .matchHeader('Authorization', 'ApiKey-v1 some_api_key')

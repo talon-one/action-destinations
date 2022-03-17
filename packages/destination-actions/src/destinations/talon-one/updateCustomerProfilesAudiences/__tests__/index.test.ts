@@ -5,22 +5,22 @@ import nock from 'nock'
 const testDestination = createTestIntegration(Destination)
 
 describe('Talon.One - Update Customer Profiles Audiences', () => {
-  it('Request body is missing', async () => {
+  it('misses request body', async () => {
     try {
-      await testDestination.testAction('updateCustomerProfileAudiences', {
+      await testDestination.testAction('updateCustomerProfilesAudiences', {
         settings: {
           apiKey: 'some_api_key',
           deployment: 'https://internal.europe-west1.talon.one'
         }
       })
     } catch (err) {
-      expect(err.message).toContain('abcd')
+      expect(err.message).toContain("The root value is missing the required field 'customerProfileId'.")
     }
   })
 
-  it('Customer profile ID is missing', async () => {
+  it('misses customer profile ID', async () => {
     try {
-      await testDestination.testAction('updateCustomerProfileAudiences', {
+      await testDestination.testAction('updateCustomerProfilesAudiences', {
         settings: {
           apiKey: 'some_api_key',
           deployment: 'https://something.europe-west1.talon.one'
@@ -36,11 +36,11 @@ describe('Talon.One - Update Customer Profiles Audiences', () => {
         }
       })
     } catch (err) {
-      expect(err.message).toContain('abcd')
+      expect(err.message).toContain("The root value is missing the required field 'customerProfileId'.")
     }
   })
 
-  it('Should work', async () => {
+  it('should work', async () => {
     nock('https://integration.talon.one')
       .put('/segment/customer_profiles/audiences', {
         data: [
@@ -55,7 +55,7 @@ describe('Talon.One - Update Customer Profiles Audiences', () => {
       .matchHeader('destination-hostname', 'https://something.europe-west1.talon.one')
       .reply(200)
 
-    await testDestination.testAction('updateCustomerProfileAudiences', {
+    await testDestination.testAction('updateCustomerProfilesAudiences', {
       settings: {
         apiKey: 'some_api_key',
         deployment: 'https://something.europe-west1.talon.one'

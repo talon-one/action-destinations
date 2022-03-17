@@ -5,7 +5,7 @@ import nock from 'nock'
 const testDestination = createTestIntegration(Destination)
 
 describe('Talon.One - Create Audience', () => {
-  it('Audience ID is missing', async () => {
+  it('misses audience ID', async () => {
     try {
       await testDestination.testAction('createAudience', {
         settings: {
@@ -18,7 +18,7 @@ describe('Talon.One - Create Audience', () => {
     }
   })
 
-  it('Audience Name is missing', async () => {
+  it('misses audience name', async () => {
     try {
       await testDestination.testAction('createAudience', {
         settings: {
@@ -34,7 +34,7 @@ describe('Talon.One - Create Audience', () => {
     }
   })
 
-  it('Should work', async () => {
+  it('should work', async () => {
     nock('https://integration.talon.one')
       .post('/segment/audiences', {
         audienceId: 'some_audience_id',

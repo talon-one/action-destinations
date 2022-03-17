@@ -5,7 +5,7 @@ import nock from 'nock'
 const testDestination = createTestIntegration(Destination)
 
 describe('Talon.One - Track Event', () => {
-  it('Customer Profile ID is missing', async () => {
+  it('misses customer profile ID', async () => {
     try {
       await testDestination.testAction('trackEvent', {
         settings: {
@@ -18,7 +18,7 @@ describe('Talon.One - Track Event', () => {
     }
   })
 
-  it('Event Type is missing', async () => {
+  it('misses event type', async () => {
     try {
       await testDestination.testAction('trackEvent', {
         settings: {
@@ -34,7 +34,7 @@ describe('Talon.One - Track Event', () => {
     }
   })
 
-  it('Type is missing', async () => {
+  it('misses type', async () => {
     try {
       await testDestination.testAction('trackEvent', {
         settings: {
@@ -51,7 +51,7 @@ describe('Talon.One - Track Event', () => {
     }
   })
 
-  it('Should work', async () => {
+  it('should work', async () => {
     nock('https://integration.talon.one')
       .put('/segment/event', {
         customerProfileId: 'some_customer_profile_id',
