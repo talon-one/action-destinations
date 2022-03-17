@@ -4,60 +4,60 @@ import nock from 'nock'
 
 const testDestination = createTestIntegration(Destination)
 
-describe('TalonOne.trackEvent', () => {
-  it('customer_profile_id is missing', async () => {
+describe('Talon.One - Track Event', () => {
+  it('Customer Profile ID is missing', async () => {
     try {
       await testDestination.testAction('trackEvent', {
         settings: {
-          api_key: 'some_api_key',
+          apiKey: 'some_api_key',
           deployment: 'https://internal.europe-west1.talon.one'
         }
       })
     } catch (err) {
-      expect(err.message).toContain("missing the required field 'customer_profile_id'.")
+      expect(err.message).toContain("The root value is missing the required field 'customerProfileId'.")
     }
   })
 
-  it('event_type is missing', async () => {
+  it('Event Type is missing', async () => {
     try {
       await testDestination.testAction('trackEvent', {
         settings: {
-          api_key: 'some_api_key',
-          deployment: 'https://internal.europe-west1.talon.one'
-        },
-        mapping: {
-          customer_profile_id: 'some_customer_profile_id'
-        }
-      })
-    } catch (err) {
-      expect(err.message).toContain("missing the required field 'event_type'.")
-    }
-  })
-
-  it('type is missing', async () => {
-    try {
-      await testDestination.testAction('trackEvent', {
-        settings: {
-          api_key: 'some_api_key',
+          apiKey: 'some_api_key',
           deployment: 'https://internal.europe-west1.talon.one'
         },
         mapping: {
-          customer_profile_id: 'some_customer_profile_id',
-          event_type: 'event_type'
+          customerProfileId: 'some_customer_profile_id'
         }
       })
     } catch (err) {
-      expect(err.message).toContain("missing the required field 'type'.")
+      expect(err.message).toContain("The root value is missing the required field 'eventType'.")
     }
   })
 
-  it('should work', async () => {
+  it('Type is missing', async () => {
+    try {
+      await testDestination.testAction('trackEvent', {
+        settings: {
+          apiKey: 'some_api_key',
+          deployment: 'https://internal.europe-west1.talon.one'
+        },
+        mapping: {
+          customerProfileId: 'some_customer_profile_id',
+          eventType: 'event_type'
+        }
+      })
+    } catch (err) {
+      expect(err.message).toContain("The root value is missing the required field 'type'.")
+    }
+  })
+
+  it('Should work', async () => {
     nock('https://integration.talon.one')
       .put('/segment/event', {
-        customer_profile_id: 'some_customer_profile_id',
-        event_type: 'event_type',
+        customerProfileId: 'some_customer_profile_id',
+        eventType: 'event_type',
         type: 'string',
-        event_attributes: {
+        eventAttributes: {
           favoriteProduct: 'fruits',
           isDogLover: true
         }
@@ -68,14 +68,14 @@ describe('TalonOne.trackEvent', () => {
 
     await testDestination.testAction('trackEvent', {
       settings: {
-        api_key: 'some_api_key',
+        apiKey: 'some_api_key',
         deployment: 'https://something.europe-west1.talon.one'
       },
       mapping: {
-        customer_profile_id: 'some_customer_profile_id',
-        event_type: 'event_type',
+        customerProfileId: 'some_customer_profile_id',
+        eventType: 'event_type',
         type: 'string',
-        event_attributes: {
+        attributes: {
           favoriteProduct: 'fruits',
           isDogLover: true
         }

@@ -26,7 +26,7 @@ describe(`Testing snapshot for ${destinationSlug} destination:`, () => {
         event: event,
         mapping: event.properties,
         settings: {
-          api_key: 'some_api_key',
+          apiKey: 'some_api_key',
           deployment: settingsData.deployment
         },
         auth: undefined
@@ -64,7 +64,7 @@ describe(`Testing snapshot for ${destinationSlug} destination:`, () => {
         event: event,
         mapping: event.properties,
         settings: {
-          api_key: 'some_api_key',
+          apiKey: 'some_api_key',
           deployment: settingsData.deployment
         },
         auth: undefined
