@@ -11,3 +11,15 @@ Object {
   "audienceName": "O6swM%XrC",
 }
 `;
+
+exports[`Testing snapshot for actions-talon-one's updateAudience destination action: all fields 1`] = `
+Object {
+  "audienceName": "y73nLJ!",
+}
+`;
+
+exports[`Testing snapshot for actions-talon-one's updateAudience destination action: required fields 1`] = `
+Object {
+  "audienceName": "y73nLJ!",
+}
+`;
