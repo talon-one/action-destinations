@@ -4,7 +4,7 @@ import type { Payload } from './generated-types'
 import { audienceId, customerProfileId } from '../t1-properties'
 
 const action: ActionDefinition<Settings, Payload> = {
-  title: 'Update Customer Profile Audiences',
+  title: 'Update Customer Profiles Audiences',
   description: 'This synchronizes audience data for multiple customer profiles.',
   fields: {
     deleteAudienceIDs: { ...audienceId },
