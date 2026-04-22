@@ -16,13 +16,15 @@ const presets: DestinationDefinition['presets'] = [
     name: 'Track Calls',
     subscribe: 'type = "track" and event != "Order Completed"',
     partnerAction: 'logEventV2',
-    mapping: defaultValues(logEventV2.fields)
+    mapping: defaultValues(logEventV2.fields),
+    type: 'automatic'
   },
   {
     name: 'Order Completed Calls',
     subscribe: 'type = "track" and event = "Order Completed"',
     partnerAction: 'logPurchase',
-    mapping: defaultValues(logPurchase.fields)
+    mapping: defaultValues(logPurchase.fields),
+    type: 'automatic'
   },
   {
     name: 'Page Calls',
@@ -33,7 +35,8 @@ const presets: DestinationDefinition['presets'] = [
       event_type: {
         '@template': 'Viewed {{name}}'
       }
-    }
+    },
+    type: 'automatic'
   },
   {
     name: 'Screen Calls',
@@ -44,19 +47,22 @@ const presets: DestinationDefinition['presets'] = [
       event_type: {
         '@template': 'Viewed {{name}}'
       }
-    }
+    },
+    type: 'automatic'
   },
   {
     name: 'Identify Calls',
     subscribe: 'type = "identify"',
     partnerAction: 'identifyUser',
-    mapping: defaultValues(identifyUser.fields)
+    mapping: defaultValues(identifyUser.fields),
+    type: 'automatic'
   },
   {
     name: 'Browser Session Tracking',
     subscribe: 'type = "track" or type = "identify" or type = "group" or type = "page" or type = "alias"',
     partnerAction: 'sessionId',
-    mapping: {}
+    mapping: {},
+    type: 'automatic'
   }
 ]
 
@@ -70,14 +76,14 @@ const destination: DestinationDefinition<Settings> = {
       apiKey: {
         label: 'API Key',
         description: 'Amplitude project API key. You can find this key in the "General" tab of your Amplitude project.',
-        type: 'string',
+        type: 'password',
         required: true
       },
       secretKey: {
         label: 'Secret Key',
         description:
           'Amplitude project secret key. You can find this key in the "General" tab of your Amplitude project.',
-        type: 'string',
+        type: 'password',
         required: true
       },
       endpoint: {

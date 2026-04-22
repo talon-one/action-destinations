@@ -2,6 +2,7 @@ import { ActionDefinition, IntegrationError } from '@segment/actions-core'
 import type { Settings } from '../generated-types'
 import { getEndpointByRegion } from '../regional-endpoints'
 import type { Payload } from './generated-types'
+import { MOENGAGE_API_VERSION } from '../versioning-info'
 
 const action: ActionDefinition<Settings, Payload> = {
   title: 'Identify User',
@@ -25,6 +26,13 @@ const action: ActionDefinition<Settings, Payload> = {
       default: {
         '@path': '$.userId'
       }
+    },
+    update_existing_only: {
+      label: 'Update existing users only',
+      type: 'boolean',
+      description: 'Setting this to true will not create new users in MoEngage. Only existing users will be updated',
+      required: false,
+      default: false
     },
     anonymousId: {
       label: 'Anonymous ID',
@@ -92,12 +100,13 @@ const action: ActionDefinition<Settings, Payload> = {
         library: { version: payload.library_version }
       },
       anonymous_id: payload.anonymousId,
-      timestamp: payload.timestamp
+      timestamp: payload.timestamp,
+      update_existing_only: payload.update_existing_only || false
     }
 
     const endpoint = getEndpointByRegion(settings.region)
 
-    return request(`${endpoint}/v1/integrations/segment?appId=${settings.api_id}`, {
+    return request(`${endpoint}/${MOENGAGE_API_VERSION}/integrations/segment?appId=${settings.api_id}`, {
       method: 'post',
       json: event,
       headers: {

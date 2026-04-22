@@ -65,6 +65,12 @@ Output:
   - [@arrayPath](#array-path)
   - [@case](#case)
   - [@replace](#replace)
+  - [@merge](#merge)
+  - [@transform](#transform)
+  - [@flatten](#flatten)
+  - [@json](#json)
+  - [@liquid](#liquid)
+  - [@excludeWhenNull](#excludewhennull)
 
 <!-- tocstop -->
 
@@ -205,81 +211,7 @@ Valid:
 ## Validation
 
 Mapping configurations can be validated using JSON Schema. The [test
-suite][schema.test.js] is a good source-of-truth for current implementation behavior.
-
-[schema.test.js]: https://github.com/segmentio/fab-5-engine/blob/master/packages/destination-actions/src/lib/mapping-kit/__tests__
-
-## Options
-
-Options can be passed to the `transform()` function as the third parameter:
-
-```js
-const output = transform(mapping, input, options)
-```
-
-Available options:
-
-```js
-{
-  merge: true // default false
-}
-```
-
-### merge
-
-If true, `merge` will cause the mapped value to be merged onto the input payload. This is useful
-when you only want to map/transform a small number of fields:
-
-```json
-Input:
-
-{
-  "a": {
-    "b": 1
-  },
-  "c": 2
-}
-
-Options:
-
-{
-  "merge": true
-}
-
-Mappings:
-
-{}
-=>
-{
-  "a": {
-    "b": 1
-  },
-  "c": 2
-}
-
-{
-  "a": 3
-}
-=>
-{
-  "a": 3,
-  "c": 2
-}
-
-{
-  "a": {
-    "c": 3
-  }
-}
-=>
-{
-  "a": {
-    "b": 1,
-    "c": 3
-  },
-  "c": 2
-}
-```
+suite](./__tests__/index.iso.test.ts) is a good source-of-truth for current implementation behavior.
 
 ## Removing values from object
 
@@ -321,6 +253,10 @@ The supported conditional values are:
 
 - "exists": If the given value is not undefined or null, the @if directive resolves to the "then"
   value. Otherwise, the "else" value is used.
+- "blank": If the given value is not undefined, not null, and does not loosely equal an empty
+  string (`''`) (i.e., is not blank), the @if directive resolves to the "then" value. Otherwise,
+  the "else" value is used. Because this check uses JavaScript loose equality semantics, values
+  such as `0` and `false` are currently treated as blank and will use the "else" branch.
 
 ```json
 Input:
@@ -345,6 +281,16 @@ Mappings:
 {
   "@if": {
     "exists": { "@path": "$.nope" },
+    "then": "yep",
+    "else": "nope"
+  }
+}
+=>
+"nope"
+
+{
+  "@if": {
+    "blank": { "@path": "$.c" },
     "then": "yep",
     "else": "nope"
   }
@@ -548,20 +494,25 @@ Result:
 
 ### @replace
 
-The @replace directive replaces to the given pattern value with a replacement string. Both "pattern" and "replacement"
-fields are required but replacement can be an empty string.
+The @replace directive replaces occurrences of a pattern in a string with a replacement string.
+The `value` field specifies the input string (may be a directive or raw value). The `pattern` field
+is required; `replacement` defaults to an empty string if omitted.
 
-````json
+By default, replacement is global (all occurrences) and case-sensitive. Use `global: false` to
+replace only the first occurrence, and `ignorecase: true` for case-insensitive matching.
+
+```json
 Input:
 
 {
-  "a": "cool-story",
+  "a": "cool-story"
 }
 
 Mappings:
 
 {
   "@replace": {
+    "value": { "@path": "$.a" },
     "pattern": "-",
     "replacement": ""
   }
@@ -569,36 +520,29 @@ Mappings:
 =>
 "coolstory"
 
-```json
-Input:
-
-{
-  "a": "cool-story",
-}
-
-Mappings:
-
 {
   "@replace": {
+    "value": { "@path": "$.a" },
     "pattern": "-",
     "replacement": "nice"
   }
 }
 =>
 "coolnicestory"
-````
+```
 
 ```json
 Input:
 
 {
-  "a": "cWWl-story-ww",
+  "a": "cWWl-story-ww"
 }
 
 Mappings:
 
 {
   "@replace": {
+    "value": { "@path": "$.a" },
     "pattern": "WW",
     "replacement": "oo",
     "ignorecase": false
@@ -612,13 +556,14 @@ Mappings:
 Input:
 
 {
-  "a": "just-the-first",
+  "a": "just-the-first"
 }
 
 Mappings:
 
 {
   "@replace": {
+    "value": { "@path": "$.a" },
     "pattern": "-",
     "replacement": "@",
     "global": false
@@ -626,4 +571,317 @@ Mappings:
 }
 =>
 "just@the-first"
+```
+
+A second pattern/replacement pair (`pattern2` / `replacement2`) can be provided to apply a second
+substitution on the result of the first:
+
+```json
+Input:
+
+{
+  "a": "something-great!"
+}
+
+Mapping:
+
+{
+  "@replace": {
+    "value": { "@path": "$.a" },
+    "pattern": "-",
+    "replacement": " ",
+    "pattern2": "great",
+    "replacement2": "awesome"
+  }
+}
+
+Output:
+
+"something awesome!"
+```
+
+### @merge
+
+The @merge directive resolves a list of objects to a single object. It accepts a list of one or more objects (either raw objects or directives that resolve to objects), and a direction that determines how overwrites will be applied for duplicate keys. The resolved object is built by combining each object in turn, moving in the specified direction, overwriting any duplicate keys.
+
+```json
+Input:
+
+{
+  "traits": {
+    "name": "Mr. Rogers",
+    "greeting": "Neighbor",
+    "neighborhood": "Latrobe"
+
+  },
+  "properties": {
+    "neighborhood": "Make Believe"
+  }
+}
+
+Mappings:
+
+{
+  "@merge": {
+    "objects": [
+      { "@path": "traits" },
+      { "@path": "properties" }
+    ],
+    "direction": "right"
+  }
+}
+=>
+{
+  "name": "Mr. Rogers",
+  "greeting": "Neighbor",
+  "neighborhood": "Make Believe"
+}
+
+{
+  "@merge": {
+    "objects": [
+      { "@path": "properties" },
+      { "@path": "traits" }
+    ],
+    "direction": "right"
+  }
+}
+=>
+{
+  "name": "Mr. Rogers",
+  "greeting": "Neighbor",
+  "neighborhood": "Latrobe"
+}
+```
+
+The @merge directive is especially useful for providing default values:
+
+```json
+Input:
+
+{
+  "traits": {
+    "name": "Mr. Rogers"
+  }
+}
+
+Mapping:
+
+{
+  "@merge": {
+    "objects": [
+      {
+        "name": "Missing name",
+        "neighborhood": "Missing neighborhood"
+      },
+      { "@path": "traits" }
+    ],
+    "direction": "right"
+  }
+}
+
+Output:
+
+{
+  "name": "Mr. Rogers",
+  "neighborhood": "Missing neighborhood"
+}
+```
+
+### @transform
+
+The @transform directive allows you to operate on the result of a mapping-kit transformation. It accepts an `apply` parameter, which is the mapping to apply to the original payload, and a `mapping` parameter, which will be run on the resulting payload. The @transform directive is useful when you need to run mappings in sequence.
+
+```json
+Input:
+
+{
+  "a": 1,
+  "b": 2
+}
+
+Mappings:
+{
+  "@transform": {
+    "apply": {
+      "foo": {
+        "@path": "$.a"
+      }
+    },
+    "mapping": {
+      "newValue": { "@path": "$.foo" }
+    }
+  }
+}
+=>
+{
+  "newValue": 1
+}
+```
+
+### @flatten
+
+The @flatten directive flattens a nested object into a single-level object using a separator string
+for the keys. The `value` field specifies the object to flatten and the `separator` field (required)
+specifies the string used to join nested keys. Set `omitArrays: true` to leave array values
+un-flattened.
+
+```json
+Input:
+
+{
+  "foo": {
+    "bar": "baz",
+    "aces": { "a": 1, "b": 2 }
+  }
+}
+
+Mapping:
+
+{
+  "@flatten": {
+    "value": { "@path": "$.foo" },
+    "separator": "."
+  }
+}
+
+Output:
+
+{
+  "bar": "baz",
+  "aces.a": 1,
+  "aces.b": 2
+}
+```
+
+With `omitArrays: true`, array values are preserved as-is instead of being flattened:
+
+```json
+Input:
+
+{
+  "foo": {
+    "bar": "baz",
+    "tags": [1, 2]
+  }
+}
+
+Mapping:
+
+{
+  "@flatten": {
+    "value": { "@path": "$.foo" },
+    "separator": ".",
+    "omitArrays": true
+  }
+}
+
+Output:
+
+{
+  "bar": "baz",
+  "tags": [1, 2]
+}
+```
+
+### @json
+
+The @json directive encodes a value to a JSON string or decodes a JSON string to a value. The `mode`
+field must be either `"encode"` or `"decode"`, and the `value` field specifies the input.
+
+```json
+Input:
+
+{
+  "foo": { "bar": "baz" }
+}
+
+Mappings:
+
+{ "@json": { "mode": "encode", "value": { "@path": "$.foo" } } }
+=>
+"{\"bar\":\"baz\"}"
+```
+
+```json
+Input:
+
+{
+  "foo": "[\"bar\",\"baz\"]"
+}
+
+Mappings:
+
+{ "@json": { "mode": "decode", "value": { "@path": "$.foo" } } }
+=>
+["bar", "baz"]
+```
+
+If `mode` is `"decode"` and the value is not valid JSON, the original string is returned unchanged.
+
+### @liquid
+
+The @liquid directive evaluates a [Liquid](https://liquidjs.com/) template string against the input
+payload and returns the rendered result. The directive value must be a string of at most 1000
+characters.
+
+```json
+Input:
+
+{
+  "properties": {
+    "name": "SpongeBob",
+    "world": "Bikini Bottom"
+  }
+}
+
+Mappings:
+
+{ "@liquid": "Hello, {{ properties.name }}!" }
+=>
+"Hello, SpongeBob!"
+
+{ "@liquid": "{% if properties.world == \"Bikini Bottom\" %}Under the sea{% endif %}" }
+=>
+"Under the sea"
+
+{ "@liquid": "{{ properties.name | upcase }}" }
+=>
+"SPONGEBOB"
+```
+
+**Restrictions:** The following Liquid tags are disabled: `case`, `for`, `include`, `layout`,
+`render`, `tablerow`. Several array-manipulation filters (e.g. `sort`, `map`, `reverse`) are also
+disabled.
+
+### @excludeWhenNull
+
+The @excludeWhenNull directive will exclude the field from the output if the resolved value is `null`.
+
+```json
+Input:
+
+{
+  "a": null,
+  "b": "hello"
+}
+
+Mappings:
+
+{
+  "a": {
+    "@excludeWhenNull": {
+      "@path": "$.a"
+    }
+  },
+  "b": {
+    "@excludeWhenNull": {
+      "@path": "$.b"
+    }
+  }
+}
+=>
+{
+  "b": "hello"
+}
 ```

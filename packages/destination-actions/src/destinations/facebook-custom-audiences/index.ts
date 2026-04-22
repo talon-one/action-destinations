@@ -1,33 +1,82 @@
-import type { DestinationDefinition } from '@segment/actions-core'
-import type { Settings } from './generated-types'
+import type { AudienceDestinationDefinition } from '@segment/actions-core'
+import { IntegrationError, ErrorCodes } from '@segment/actions-core'
+import type { Settings, AudienceSettings } from './generated-types'
+import { adAccountId, audienceDescription } from './fields'
+import sync from './sync'
+import { createAudience, getAudience } from './functions'
+import { presets } from './presets'
 
-import syncEngage from './syncEngage'
-
-import syncRetl from './syncRetl'
-
-const destination: DestinationDefinition<Settings> = {
+const destination: AudienceDestinationDefinition<Settings, AudienceSettings> = {
   name: 'Facebook Custom Audiences (Actions)',
   slug: 'actions-facebook-custom-audiences',
   mode: 'cloud',
   description: 'The Facebook Custom Audiences destination.',
-
   authentication: {
     scheme: 'oauth2',
     fields: {
-      placeholder: {
-        label: 'Placeholder',
-        description: 'Placeholder',
-        type: 'string'
+      retlAdAccountId: 
+      {
+        ...adAccountId,
+        description: 'Your advertiser account id. Read [more](https://www.facebook.com/business/help/1492627900875762). This is required to set up the connection, but can be overriden using the Engage Audience setting named "Advertiser Account ID".' 
       }
+    }
+  },
+  extendRequest({ auth }) {
+    return {
+      headers: {
+        authorization: `Bearer ${auth?.accessToken}`
+      }
+    }
+  },
+  audienceFields: {
+    engageAdAccountId: {
+        ...adAccountId,
+        description: 'Your advertiser account id. Read [more](https://www.facebook.com/business/help/1492627900875762). This overrides the main Destination settings named "Advertiser Account ID".',
+        required: false
+      },
+    audienceDescription
+  },
+  audienceConfig: {
+    mode: {
+      type: 'synced',
+      full_audience_sync: false
     },
-    refreshAccessToken: async () => {
-      return { accessToken: 'TODO: Implement this' }
+    async createAudience(request, createAudienceInput ) {
+      const { 
+        audienceName,
+        audienceSettings: { 
+          engageAdAccountId, 
+          audienceDescription 
+        } = {},
+        settings: { retlAdAccountId } = {}, 
+        features,
+        statsContext
+      } = createAudienceInput
+
+      const addAccountId = (engageAdAccountId ?? retlAdAccountId) as string
+      const { data: { externalId: id } = {}, error } = await createAudience(request, audienceName, addAccountId, audienceDescription, features, statsContext)
+      if (error) {
+        throw new IntegrationError(error.message, ErrorCodes.CREATE_AUDIENCE_FAILED, 400)
+      }
+      return { externalId: id as string }
+    },
+    async getAudience(request, getAudienceInput) {
+      const { 
+        externalId,
+        features, 
+        statsContext 
+      } = getAudienceInput
+      const { data: { externalId: id } = {}, error } = await getAudience(request, externalId, features, statsContext)
+      if (error) {
+        throw new IntegrationError(error.message, ErrorCodes.GET_AUDIENCE_FAILED, 400)
+      }
+      return { externalId: id as string }
     }
   },
   actions: {
-    syncEngage,
-    syncRetl
-  }
+    sync
+  },
+  presets
 }
 
 export default destination

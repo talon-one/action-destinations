@@ -12,7 +12,7 @@ const destination: DestinationDefinition<Settings> = {
     scheme: 'custom',
     fields: {
       apiToken: {
-        type: 'string',
+        type: 'password',
         label: 'API Token',
         description: 'Your Metronome API Token',
         required: true
@@ -44,7 +44,8 @@ const destination: DestinationDefinition<Settings> = {
       name: 'Send track events to Metronome',
       subscribe: 'type = "track"',
       partnerAction: 'sendEvent',
-      mapping: defaultValues(sendEvent.fields)
+      mapping: defaultValues(sendEvent.fields),
+      type: 'automatic'
     }
   ]
 }

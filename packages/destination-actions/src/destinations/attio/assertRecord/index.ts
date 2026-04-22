@@ -2,7 +2,8 @@ import type { ActionDefinition, DynamicFieldResponse, RequestClient } from '@seg
 import type { InputField } from '@segment/actions-core'
 import type { Settings } from '../generated-types'
 import type { Payload } from './generated-types'
-import { AttioClient } from '../api'
+import { AttioClient, SimpleValue } from '../api'
+import { commonFields } from '../common-fields'
 
 const object: InputField = {
   type: 'string',
@@ -28,20 +29,14 @@ const attributes: InputField = {
   type: 'object',
   label: 'Attributes',
   description:
-    'Attributes to either set or update on the Attio Record. The keys on the left should be ' +
-    'Attio Attribute IDs or Slugs, and the values on the right are Segment attributes or custom text. ' +
+    'Attributes to either set or update on the Attio Record. The values on the left should be ' +
+    'Segment attributes or custom text, and the values on the right are Attio Attribute IDs or Slugs, ' +
+    'for example: traits.name → name. ' +
     'The Matching Attribute must be included for assertion to work.',
   defaultObjectUI: 'keyvalue:only',
   additionalProperties: true,
-  properties: {
-    name: {
-      label: 'Name',
-      type: 'string'
-    }
-  },
-  default: {
-    name: { '@path': '$.traits.name' }
-  }
+  properties: {},
+  default: {}
 }
 
 export const objectLookup = async (request: RequestClient): Promise<DynamicFieldResponse> => {
@@ -74,24 +69,36 @@ const action: ActionDefinition<Settings, Payload> = {
   fields: {
     object,
     matching_attribute,
-    attributes
+    attributes,
+    ...commonFields
   },
 
   dynamicFields: {
     object: objectLookup
   },
 
-  perform: async (request, data) => {
-    const {
-      payload: { attributes, object, matching_attribute }
-    } = data
-
+  perform: async (request, { payload }) => {
     const client = new AttioClient(request)
 
     return await client.assertRecord({
-      object,
-      matching_attribute,
-      values: attributes ?? {}
+      object: payload.object,
+      matching_attribute: payload.matching_attribute,
+      values: payload.attributes ?? {}
+    })
+  },
+
+  performBatch: async (request, { payload }) => {
+    const client = new AttioClient(request)
+
+    return await client.batchAssert({
+      assertions: payload.map((item) => ({
+        object: item.object,
+        mode: 'create-or-update',
+        matching_attribute: item.matching_attribute,
+        multiselect_values: 'append',
+        values: (item.attributes as Record<string, SimpleValue>) ?? {},
+        received_at: item.received_at?.toString() ?? new Date().toISOString()
+      }))
     })
   }
 }

@@ -29,6 +29,12 @@ export function flattenObject(obj: JSONObject) {
       return
     }
 
+    // Trim string values
+    if (typeof obj[key] === 'string') {
+      flattened[key] = (obj[key] as string).trim()
+      return
+    }
+
     flattened[key] = obj[key]
   })
 
@@ -81,6 +87,10 @@ export interface SearchResponse {
 
 export interface UpsertRecordResponse extends ResponseInfo {}
 
+export function transformEventName(eventName: string) {
+  return eventName.replace(/[\s.]+/g, '_').toLocaleLowerCase()
+}
+
 export enum AssociationCategory {
   HUBSPOT_DEFINED = 'HUBSPOT_DEFINED',
   USER_DEFINED = 'USER_DEFINED',
@@ -105,4 +115,14 @@ export interface AssociationLabel {
 }
 export interface GetAssociationLabelResponse {
   results: AssociationLabel[]
+}
+export interface GetCustomEventsResult {
+  name: string
+  fullyQualifiedName: string
+}
+export interface GetCustomEventResponse {
+  data: {
+    total: number
+    results: GetCustomEventsResult[]
+  }
 }

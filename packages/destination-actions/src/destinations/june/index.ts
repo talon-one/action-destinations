@@ -11,25 +11,29 @@ const presets: DestinationDefinition['presets'] = [
     name: 'Track Calls',
     subscribe: 'type = "track"',
     partnerAction: 'track',
-    mapping: defaultValues(track.fields)
+    mapping: defaultValues(track.fields),
+    type: 'automatic'
   },
   {
     name: 'Page Calls',
     subscribe: 'type = "page"',
     partnerAction: 'page',
-    mapping: defaultValues(page.fields)
+    mapping: defaultValues(page.fields),
+    type: 'automatic'
   },
   {
     name: 'Identify Calls',
     subscribe: 'type = "identify"',
     partnerAction: 'identify',
-    mapping: defaultValues(identify.fields)
+    mapping: defaultValues(identify.fields),
+    type: 'automatic'
   },
   {
     name: 'Group Calls',
     subscribe: 'type = "group"',
     partnerAction: 'group',
-    mapping: defaultValues(group.fields)
+    mapping: defaultValues(group.fields),
+    type: 'automatic'
   }
 ]
 
@@ -50,7 +54,7 @@ const destination: DestinationDefinition<Settings> = {
       apiKey: {
         label: 'API Key',
         description: 'Your June API Key',
-        type: 'string',
+        type: 'password',
         required: true
       }
     },

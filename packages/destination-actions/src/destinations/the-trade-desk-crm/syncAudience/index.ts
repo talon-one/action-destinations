@@ -1,27 +1,50 @@
 import type { ActionDefinition } from '@segment/actions-core'
 import type { Settings } from '../generated-types'
 import type { Payload } from './generated-types'
-import { name, region, pii_type, email, enable_batching, event_name, batch_size } from '../properties'
-import { processPayload } from '../functions'
+import { external_id, pii_type, email, enable_batching, event_name, batch_size } from '../properties'
+import { processPayload, ExecuteInputRaw, RawData } from '../functions'
 
 const action: ActionDefinition<Settings, Payload> = {
   title: 'Sync Audience to CRM Data Segment',
   description: 'Drop users into the given CRM Data Segment',
   defaultSubscription: 'event = "Audience Entered"',
   fields: {
-    name: { ...name },
-    region: { ...region },
+    external_id: { ...external_id },
     pii_type: { ...pii_type },
     email: { ...email },
     enable_batching: { ...enable_batching },
     event_name: { ...event_name },
     batch_size: { ...batch_size }
   },
-  perform: async (request, { settings, payload }) => {
-    return processPayload(request, settings, [payload])
+  perform: async (
+    request,
+    { settings, payload, features, rawData, subscriptionMetadata }: ExecuteInputRaw<Settings, Payload, RawData>
+  ) => {
+    return processPayload(
+      {
+        request,
+        settings,
+        payloads: [payload],
+        features,
+        rawData: rawData ? [rawData] : []
+      },
+      subscriptionMetadata
+    )
   },
-  performBatch: async (request, { settings, payload }) => {
-    return processPayload(request, settings, payload)
+  performBatch: async (
+    request,
+    { settings, payload, features, rawData, subscriptionMetadata }: ExecuteInputRaw<Settings, Payload[], RawData[]>
+  ) => {
+    return processPayload(
+      {
+        request,
+        settings,
+        payloads: payload,
+        features,
+        rawData
+      },
+      subscriptionMetadata
+    )
   }
 }
 

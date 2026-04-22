@@ -16,7 +16,7 @@ const destination: DestinationDefinition<Settings> = {
       apiKey: {
         label: 'API Key',
         description: 'You can find your API Key in the Segment Integration page in your admin settings.',
-        type: 'string',
+        type: 'password',
         required: true
       }
     },
@@ -44,13 +44,15 @@ const destination: DestinationDefinition<Settings> = {
       name: 'Create or update a Company',
       subscribe: 'type = "group"',
       partnerAction: 'group',
-      mapping: defaultValues(group.fields)
+      mapping: defaultValues(group.fields),
+      type: 'automatic'
     },
     {
       name: 'Create or update a User',
       subscribe: 'type = "identify"',
       partnerAction: 'identify',
-      mapping: defaultValues(identify.fields)
+      mapping: defaultValues(identify.fields),
+      type: 'automatic'
     }
   ],
 

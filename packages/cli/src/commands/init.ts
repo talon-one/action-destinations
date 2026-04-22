@@ -42,7 +42,7 @@ export default class Init extends Command {
     }
   ]
 
-  parseFlags() {
+  parseFlags(): flags.Output {
     return this.parse(Init)
   }
 
@@ -89,6 +89,16 @@ export default class Init extends Command {
             value: 'oauth2-auth'
           },
           {
+            title: 'Audiences with OAuth2',
+            description: 'Creates an OAuth2 integration with Get/Create Audience methods',
+            value: 'audience-oauth2'
+          },
+          {
+            title: 'Audiences with Custom Auth',
+            description: 'Creates a Custom Auth integration with Get/Create Audience methods',
+            value: 'audience-custom-auth'
+          },
+          {
             title: 'Minimal',
             value: 'minimal'
           }
@@ -121,7 +131,7 @@ export default class Init extends Command {
       renderTemplates(templatePath, targetDirectory, { ...answers, slugWithoutActions })
       this.spinner.succeed(`Scaffold integration`)
     } catch (err) {
-      this.spinner.fail(`Scaffold integration: ${chalk.red(err.message)}`)
+      this.spinner.fail(`Scaffold integration: ${chalk.red((err as Error).message)}`)
       this.exit()
     }
 
@@ -130,7 +140,7 @@ export default class Init extends Command {
       await GenerateTypes.run(['--path', entryPath])
       this.spinner.succeed()
     } catch (err) {
-      this.spinner.fail(chalk`Generating types for {magenta ${slug}} destination: ${err.message}`)
+      this.spinner.fail(chalk`Generating types for {magenta ${slug}} destination: ${(err as Error).message}`)
     }
 
     if (!isBrowserTemplate) {
@@ -146,7 +156,7 @@ export default class Init extends Command {
         )
         this.spinner.succeed(`Created snapshot tests for ${slug} destination`)
       } catch (err) {
-        this.spinner.fail(`Snapshot test creation failed: ${chalk.red(err.message)}`)
+        this.spinner.fail(`Snapshot test creation failed: ${chalk.red((err as Error).message)}`)
         this.exit()
       }
     }

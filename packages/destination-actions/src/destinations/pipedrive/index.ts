@@ -29,7 +29,7 @@ const destination: DestinationDefinition<Settings> = {
         label: 'API Token',
         description:
           'Pipedrive API token. This is found in Pipedrive in Settings > Personal preferences > API > Your personal API token.',
-        type: 'string',
+        type: 'password',
         // minLength: 20,
         required: true
       },
@@ -84,19 +84,22 @@ const destination: DestinationDefinition<Settings> = {
       name: 'Create or Update a Person',
       subscribe: 'type = "identify"',
       partnerAction: 'createUpdatePerson',
-      mapping: defaultValues(createUpdatePerson.fields)
+      mapping: defaultValues(createUpdatePerson.fields),
+      type: 'automatic'
     },
     {
       name: 'Create or Update an Organization',
       subscribe: 'type = "group"',
       partnerAction: 'createUpdateOrganization',
-      mapping: defaultValues(createUpdateOrganization.fields)
+      mapping: defaultValues(createUpdateOrganization.fields),
+      type: 'automatic'
     },
     {
       name: 'Create or Update an Activity',
       subscribe: 'type = "track" and event = "Activity Upserted"',
       partnerAction: 'createUpdateActivity',
-      mapping: defaultValues(createUpdateActivity.fields)
+      mapping: defaultValues(createUpdateActivity.fields),
+      type: 'automatic'
     }
   ]
 }

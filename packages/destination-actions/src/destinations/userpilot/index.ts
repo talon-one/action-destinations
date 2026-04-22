@@ -1,4 +1,5 @@
 import type { DestinationDefinition } from '@segment/actions-core'
+
 import { defaultValues } from '@segment/actions-core'
 
 import type { Settings } from './generated-types'
@@ -9,6 +10,8 @@ import identifyUser from './identifyUser'
 
 import trackEvent from './trackEvent'
 
+import identifyCompany from './identifyCompany'
+
 const destination: DestinationDefinition<Settings> = {
   name: 'Userpilot Cloud (Actions)',
   slug: 'actions-userpilot-cloud',
@@ -18,13 +21,22 @@ const destination: DestinationDefinition<Settings> = {
       name: 'Identify User',
       subscribe: 'type = "identify"',
       partnerAction: 'identifyUser',
-      mapping: defaultValues(identifyUser.fields)
+      mapping: defaultValues(identifyUser.fields),
+      type: 'automatic'
+    },
+    {
+      name: 'Identify Company',
+      subscribe: 'type = "group"',
+      partnerAction: 'identifyCompany',
+      mapping: defaultValues(identifyCompany.fields),
+      type: 'automatic'
     },
     {
       name: 'Track Event',
       subscribe: 'type = "track"',
       partnerAction: 'trackEvent',
-      mapping: defaultValues(trackEvent.fields)
+      mapping: defaultValues(trackEvent.fields),
+      type: 'automatic'
     }
   ],
   authentication: {
@@ -34,7 +46,7 @@ const destination: DestinationDefinition<Settings> = {
         label: 'API Key',
         description:
           'Your Userpilot API key can be found in the [Userpilot environment](https://run.userpilot.io/environment) dashboard.',
-        type: 'string',
+        type: 'password',
         required: true
       },
       endpoint: {
@@ -70,7 +82,8 @@ const destination: DestinationDefinition<Settings> = {
 
   actions: {
     identifyUser,
-    trackEvent
+    trackEvent,
+    identifyCompany
   }
 }
 

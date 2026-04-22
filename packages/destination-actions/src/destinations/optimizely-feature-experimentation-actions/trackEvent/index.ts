@@ -4,6 +4,7 @@ import type { Payload } from './generated-types'
 import { ProjectConfig } from '../types'
 import { buildVisitorAttributes, getEventId, getEventKeys, isValidJson } from './functions'
 import dayjs from '../../../lib/dayjs'
+import { OPTIMIZELY_FEATURE_EXPERIMENTATION_TRACK_API_VERSION } from '../versioning-info'
 
 const action: ActionDefinition<Settings, Payload> = {
   title: 'Track Event',
@@ -93,7 +94,8 @@ const action: ActionDefinition<Settings, Payload> = {
     },
     uuid: {
       label: 'Unique ID',
-      type: 'hidden',
+      type: 'string',
+      unsafe_hidden: true,
       description: 'Unique ID for the event',
       required: true,
       default: {
@@ -107,7 +109,9 @@ const action: ActionDefinition<Settings, Payload> = {
     }
   },
   perform: async (request, { settings, payload }) => {
-    const result = await request<ProjectConfig>(settings.dataFileUrl)
+    const result = await request<ProjectConfig>(settings.dataFileUrl, {
+      skipResponseCloning: true
+    })
     if (!isValidJson(result.content)) {
       throw new IntegrationError(result.content, 'PROJECT_DEACTIVATED', 400)
     }
@@ -152,7 +156,7 @@ const action: ActionDefinition<Settings, Payload> = {
       })
     }
 
-    return await request('https://logx.optimizely.com/v1/events', {
+    return await request(`https://logx.optimizely.com/${OPTIMIZELY_FEATURE_EXPERIMENTATION_TRACK_API_VERSION}/events`, {
       method: 'POST',
       json: {
         account_id: dataFile.accountId,

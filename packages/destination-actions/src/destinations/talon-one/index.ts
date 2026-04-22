@@ -9,6 +9,9 @@ import updateCustomerProfilesAudiences from './updateCustomerProfilesAudiences'
 import trackEvent from './trackEvent'
 import updateCustomerProfileV2 from './updateCustomerProfileV2'
 import updateCustomerSession from './updateCustomerSession'
+import trackEventV2 from './trackEventV2'
+import updateCustomerSessionV2 from './updateCustomerSessionV2'
+import updateCustomerProfileV3 from './updateCustomerProfileV3'
 
 const destination: DestinationDefinition<Settings> = {
   name: 'Talon.One (Actions)',
@@ -21,7 +24,7 @@ const destination: DestinationDefinition<Settings> = {
       apiKey: {
         label: 'API Key',
         description: 'Created under Developer Settings in the Talon.One Campaign Manager.',
-        type: 'string',
+        type: 'password',
         required: true
       },
       deployment: {
@@ -53,10 +56,13 @@ const destination: DestinationDefinition<Settings> = {
     updateAudience,
     deleteAudience,
     updateCustomerProfile,
+    updateCustomerProfileV2,
+    updateCustomerProfileV3,
     updateCustomerProfilesAudiences,
     trackEvent,
-    updateCustomerProfileV2,
-    updateCustomerSession
+    trackEventV2,
+    updateCustomerSession,
+    updateCustomerSessionV2
   }
 }
 
